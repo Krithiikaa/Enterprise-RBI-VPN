@@ -11,14 +11,15 @@
 
 <hr/>
 
-## ✨ Introduction
+## ✨ The Principle
 
-A self-hosted, on-premises system that brings zero-trust security to your enterprise through a **single, lightweight Chrome extension**. Aegis provides:
+**🛡️ Aegis** brings absolute **Zero-Trust Security** to your enterprise via one lightweight Chrome extension.
 
-1. 🌐 **Secure Routing ("VPN"):** Browser traffic is intelligently routed through an internal forward-proxy gateway with a single toggle. HTTPS is safely tunneled, not decrypted—meaning **no intrusive certificates on client devices**.
-2. 🔒 **Remote Browser Isolation (RBI):** High-risk browsing is containerized inside a disposable Docker environment **on the server**. Users receive a seamless, interactive pixel stream (noVNC). Nothing executes locally, and containers vanish when closed.
+**Here's the magic:**
+* 🌐 **Secure Routing ("VPN"):** Instantly tunnel all browser traffic through a corporate gateway. No invasive certs, no heavy desktop apps. 
+* 🧨 **Remote Browser Isolation (RBI):** Click a risky link? We spin up a disposable Docker container on your server. You get a seamless, interactive pixel stream (noVNC). The malware stays trapped on the server. Close the tab, and the container vanishes into the void. 🕳️💨
 
-*Everything runs on your own infrastructure with zero external dependencies.*
+**Zero Trust. Zero local execution. Zero dependencies. 🚀**
 
 ---
 
