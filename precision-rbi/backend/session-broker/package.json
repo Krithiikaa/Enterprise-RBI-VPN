@@ -1,0 +1,20 @@
+{
+  "name": "precision-rbi-session-broker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Spawns/reaps per-session RBI containers; owns the three-way teardown.",
+  "main": "broker.js",
+  "scripts": {
+    "start": "node broker.js"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,31 @@
+/* Precision RBI — bundled typography.
+ * Drop real PlayfairDisplay.woff2 / Montserrat.woff2 into chrome-extension/fonts/
+ * (see fonts/README.txt). Until then the system fallbacks below render cleanly,
+ * and NO external CDN is ever contacted (HC-06 air-gap compliance preserved). */
+
+@font-face {
+  font-family: "Playfair Display";
+  src: url("../fonts/PlayfairDisplay.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/Montserrat.woff2") format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  --navy: #0a2342;
+  --navy-mid: #0d3b6e;
+  --mint: #7fffd4;
+  --text: #e8f4f8;
+  --text-dim: #a8d8ea;
+  --danger: #d85a30;
+  --success: #1d9e75;
+  --border: rgba(168, 216, 234, 0.18);
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --sans: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+}

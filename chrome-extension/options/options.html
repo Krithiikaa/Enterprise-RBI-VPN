@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aegis — Settings</title>
+  <style>
+    @font-face { font-family:"Playfair Display"; src:local("Playfair Display"),
+      url("../fonts/PlayfairDisplay.woff2") format("woff2"); font-weight:400 800; font-display:swap; }
+    @font-face { font-family:"Montserrat"; src:local("Montserrat"),
+      url("../fonts/Montserrat.woff2") format("woff2"); font-weight:300 700; font-display:swap; }
+    :root{ --navy:#0a2342; --mint:#7fffd4; --mint-dim:#4fd9b4; --ink:#e8f6f1;
+      --muted:#93b0c4; --danger:#ff6b6b;
+      --display:"Playfair Display",Georgia,serif;
+      --body:"Montserrat",-apple-system,"Segoe UI",Roboto,sans-serif; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; min-height:100vh; font-family:var(--body); color:var(--ink);
+      background:radial-gradient(120% 70% at 100% 0%, rgba(127,255,212,.10), transparent 55%),
+        linear-gradient(180deg,#0a2342,#081b34);
+      display:flex; justify-content:center; padding:48px 20px; }
+    .card{ width:100%; max-width:520px; background:rgba(255,255,255,.03);
+      border:1px solid rgba(127,255,212,.16); border-radius:16px; padding:30px 30px 26px; }
+    .head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+    .head svg{ flex-shrink:0; }
+    h1{ font-family:var(--display); font-weight:700; font-size:26px; margin:0; color:#fff; }
+    .sub{ color:var(--mint-dim); font-size:11px; letter-spacing:.14em;
+      text-transform:uppercase; margin:0 0 22px; }
+    label{ display:block; font-size:12px; font-weight:600; margin:16px 0 6px; color:var(--ink); }
+    .hint{ font-weight:400; color:var(--muted); font-size:11px; }
+    input{ width:100%; padding:11px 13px; border-radius:10px; font-family:var(--body);
+      font-size:14px; color:var(--ink); background:rgba(10,35,66,.7);
+      border:1px solid rgba(127,255,212,.2); outline:none; transition:.2s; }
+    input:focus{ border-color:var(--mint); box-shadow:0 0 0 3px rgba(127,255,212,.12); }
+    .row{ display:flex; gap:12px; }
+    .row > div{ flex:1; }
+    .actions{ display:flex; gap:12px; margin-top:26px; }
+    button{ font-family:var(--body); font-weight:600; font-size:13.5px; cursor:pointer;
+      border:none; border-radius:10px; padding:12px 16px; transition:transform .15s,filter .2s; }
+    button:active{ transform:translateY(1px); }
+    .save{ flex:1; color:var(--navy);
+      background:linear-gradient(135deg,var(--mint),var(--mint-dim));
+      box-shadow:0 6px 16px rgba(127,255,212,.18); }
+    .test{ background:transparent; color:var(--mint); border:1px solid rgba(127,255,212,.35); }
+    .test:hover{ background:rgba(127,255,212,.08); }
+    .result{ margin-top:18px; font-size:12.5px; min-height:18px; }
+    .result.ok{ color:var(--mint); }
+    .result.err{ color:var(--danger); }
+    details{ margin-top:18px; }
+    summary{ cursor:pointer; color:var(--mint-dim); font-size:12px; }
+    .note{ margin-top:20px; padding:12px 14px; border-radius:10px; font-size:11.5px;
+      line-height:1.5; color:var(--muted); background:rgba(10,35,66,.55);
+      border:1px solid rgba(127,255,212,.1); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="head">
+      <svg viewBox="0 0 32 32" width="30" height="30">
+        <path d="M16 2 4 7v8c0 7.2 5 12.4 12 15 7-2.6 12-7.8 12-15V7L16 2z"
+              fill="none" stroke="#7fffd4" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M11 16.5l3.4 3.4L21 12" fill="none" stroke="#7fffd4"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1>Aegis Settings</h1>
+      </div>
+    </div>
+    <p class="sub">Configure once · managed by IT</p>
+
+    <label for="edgeHost">Gateway server IP / host
+      <span class="hint">— the address your IT team gave you</span></label>
+    <input id="edgeHost" placeholder="10.225.244.50" autocomplete="off" spellcheck="false">
+
+    <label for="token">Access token
+      <span class="hint">— provided with the server address</span></label>
+    <input id="token" type="password" placeholder="••••••••••••••••" autocomplete="off">
+
+    <details>
+      <summary>Advanced ports (defaults are correct for standard installs)</summary>
+      <div class="row" style="margin-top:12px;">
+        <div>
+          <label for="edgePort">API / viewer port</label>
+          <input id="edgePort" placeholder="8080" inputmode="numeric">
+        </div>
+        <div>
+          <label for="proxyPort">Routing (proxy) port</label>
+          <input id="proxyPort" placeholder="3128" inputmode="numeric">
+        </div>
+      </div>
+      <label for="proxyHost">Routing host <span class="hint">— blank = same as gateway</span></label>
+      <input id="proxyHost" placeholder="(same as gateway IP)" autocomplete="off" spellcheck="false">
+    </details>
+
+    <div class="actions">
+      <button class="save" id="saveBtn">Save</button>
+      <button class="test" id="testBtn">Test connection</button>
+    </div>
+    <div class="result" id="result"></div>
+
+    <div class="note">
+      Secure routing uses your browser's proxy setting and tunnels HTTPS without
+      decrypting it, so no certificate is installed on this device. Remote
+      browsing renders pages on the company server; only the screen is streamed
+      here. Both can be turned off anytime from the toolbar popup.
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

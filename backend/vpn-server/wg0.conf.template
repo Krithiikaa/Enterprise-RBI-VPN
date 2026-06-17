@@ -1,0 +1,21 @@
+# =============================================================================
+#  wg0.conf.template — rendered into /config/wg0.conf at container start.
+#  Placeholders ${...} are substituted from environment variables (see .env).
+#  This is the OS-level / full-device VPN, used when a managed device needs ALL
+#  of its traffic tunneled (not just the browser, which uses the proxy-gateway).
+# =============================================================================
+[Interface]
+Address    = ${WG_SERVER_ADDRESS}
+ListenPort = ${WG_LISTEN_PORT}
+PrivateKey = ${WG_SERVER_PRIVATE_KEY}
+
+# Masquerade peer traffic out of the container's default interface.
+PostUp   = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+# Peers are appended at runtime from the WG_PEERS variable. Each entry:
+#   <peer-public-key>|<allowed-ip/32>
+# becomes:
+#   [Peer]
+#   PublicKey  = <peer-public-key>
+#   AllowedIPs = <allowed-ip/32>

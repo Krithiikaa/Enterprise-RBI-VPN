@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precision RBI</title>
+  <link rel="stylesheet" href="../fonts/fonts.css" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="hdr">
+    <div class="brand">
+      <span class="logo"></span>
+      <h1>Precision <span>RBI</span></h1>
+    </div>
+    <button id="settings" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
+  </header>
+
+  <section class="vpn-card">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 120 120" class="ring" aria-hidden="true">
+        <circle cx="60" cy="60" r="52" class="ring-track" />
+        <circle cx="60" cy="60" r="52" class="ring-fill" id="ring" />
+      </svg>
+      <button id="vpnToggle" class="ring-btn" aria-pressed="false">
+        <span id="vpnIcon">⏻</span>
+      </button>
+    </div>
+    <div class="vpn-meta">
+      <div id="vpnStatus" class="status off">Protection Off</div>
+      <div id="vpnSub" class="sub">Toggle to route traffic through the secure gateway</div>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-label">Latency</div>
+      <div class="stat-val"><span id="ping">—</span><small>ms</small></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Active Sessions</div>
+      <div class="stat-val"><span id="sessions">—</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Page Risk</div>
+      <div class="stat-val"><span id="risk" class="risk-badge">—</span></div>
+    </div>
+  </section>
+
+  <section class="actions">
+    <button id="startSession" class="btn primary">
+      <span class="btn-label">Start Remote Session</span>
+      <span class="spinner" hidden></span>
+    </button>
+    <button id="isolatePage" class="btn ghost">Isolate This Page</button>
+  </section>
+
+  <footer class="ftr">
+    <span id="serverDot" class="dot"></span>
+    <span id="serverText">Checking server…</span>
+  </footer>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+/* =============================================================================
+   Aegis popup — Navy (#0a2342) + Mint/Aquamarine (#7fffd4)
+   Type: Playfair Display (display) + Montserrat (body), with air-gapped
+   fallbacks so the UI looks right even with no internet / no bundled fonts.
+   Drop Montserrat/Playfair .woff2 into chrome-extension/fonts to use the exact
+   faces (see @font-face below).
+   ============================================================================= */
+
+@font-face {
+  font-family: "Playfair Display";
+  src: local("Playfair Display"), url("../fonts/PlayfairDisplay.woff2") format("woff2");
+  font-weight: 400 800; font-display: swap;
+}
+@font-face {
+  font-family: "Montserrat";
+  src: local("Montserrat"), url("../fonts/Montserrat.woff2") format("woff2");
+  font-weight: 300 700; font-display: swap;
+}
+
+:root {
+  --navy: #0a2342;
+  --navy-2: #0e2c52;
+  --navy-3: #123466;
+  --mint: #7fffd4;
+  --mint-dim: #4fd9b4;
+  --ink: #e8f6f1;
+  --muted: #93b0c4;
+  --amber: #f5a623;
+  --danger: #ff6b6b;
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --body: "Montserrat", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --r: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 340px;
+  font-family: var(--body);
+  color: var(--ink);
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(127,255,212,.10), transparent 55%),
+    linear-gradient(180deg, var(--navy) 0%, #081b34 100%);
+}
+
+.shell { padding: 16px 16px 12px; }
+
+/* ---- Brand ---------------------------------------------------------------- */
+.brand { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.mark {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: grid; place-items: center;
+  background: rgba(127,255,212,.08);
+  border: 1px solid rgba(127,255,212,.22);
+}
+.brand-text { flex: 1; }
+.brand-text h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: 22px; line-height: 1; margin: 0; letter-spacing: .3px;
+  color: #fff;
+}
+.brand-text p { margin: 3px 0 0; font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--mint-dim); }
+.gear {
+  background: transparent; border: none; color: var(--muted);
+  cursor: pointer; padding: 6px; border-radius: 8px; transition: .2s;
+  display: grid; place-items: center;
+}
+.gear:hover { color: var(--mint); background: rgba(127,255,212,.08); transform: rotate(35deg); }
+
+/* ---- Status card ---------------------------------------------------------- */
+.status-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(127,255,212,.14);
+  border-radius: var(--r);
+  padding: 12px 13px; margin-bottom: 13px;
+}
+.status-row { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--muted); transition: .3s;
+}
+.dot.ok { background: var(--mint); box-shadow: 0 0 0 0 rgba(127,255,212,.6); animation: ring 2s infinite; }
+.dot.bad { background: var(--danger); }
+@keyframes ring {
+  0% { box-shadow: 0 0 0 0 rgba(127,255,212,.5); }
+  70% { box-shadow: 0 0 0 7px rgba(127,255,212,0); }
+  100% { box-shadow: 0 0 0 0 rgba(127,255,212,0); }
+}
+.status-label { font-size: 12.5px; font-weight: 500; }
+.metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.metric {
+  text-align: center; padding: 8px 4px; border-radius: 9px;
+  background: rgba(10,35,66,.55); border: 1px solid rgba(127,255,212,.08);
+}
+.metric-value { display: block; font-family: var(--display); font-size: 19px;
+  font-weight: 700; color: var(--mint); line-height: 1; }
+.metric-key { display: block; margin-top: 4px; font-size: 9.5px;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* ---- VPN block ------------------------------------------------------------ */
+.vpn-block {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(127,255,212,.14);
+  border-radius: var(--r); padding: 13px; margin-bottom: 13px;
+}
+.vpn-head { display: flex; align-items: center; justify-content: space-between; }
+.vpn-head h2 { font-family: var(--display); font-size: 16px; font-weight: 700;
+  margin: 0; color: #fff; }
+.vpn-head p { margin: 3px 0 0; font-size: 11px; color: var(--muted); max-width: 200px; }
+
+.switch {
+  position: relative; width: 52px; height: 30px; flex-shrink: 0;
+  border-radius: 30px; border: 1px solid rgba(127,255,212,.25);
+  background: rgba(10,35,66,.8); cursor: pointer; padding: 0;
+  transition: background .3s, border-color .3s;
+}
+.switch .knob {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--muted);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s;
+}
+.switch[aria-checked="true"] {
+  background: linear-gradient(90deg, rgba(127,255,212,.25), rgba(127,255,212,.4));
+  border-color: var(--mint);
+}
+.switch[aria-checked="true"] .knob { transform: translateX(22px); background: var(--mint);
+  box-shadow: 0 0 10px rgba(127,255,212,.7); }
+
+.vpn-state {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  font-size: 11.5px; color: var(--muted);
+}
+.pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.vpn-state.on { color: var(--mint); }
+.vpn-state.on .pulse { background: var(--mint); animation: ring 1.8s infinite; }
+
+/* ---- RBI block ------------------------------------------------------------ */
+.rbi-block { margin-bottom: 12px; }
+.primary {
+  width: 100%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: var(--body); font-weight: 600; font-size: 13.5px;
+  color: var(--navy); padding: 13px; border-radius: var(--r);
+  background: linear-gradient(135deg, var(--mint), var(--mint-dim));
+  box-shadow: 0 6px 18px rgba(127,255,212,.18);
+  transition: transform .15s ease, box-shadow .2s, filter .2s;
+}
+.primary:hover { transform: translateY(-1px); box-shadow: 0 9px 22px rgba(127,255,212,.28); }
+.primary:active { transform: translateY(0) scale(.99); }
+.primary:disabled { filter: grayscale(.6) brightness(.8); cursor: not-allowed; box-shadow: none; }
+.primary-icon { display: grid; place-items: center; }
+.rbi-note { margin: 9px 2px 0; font-size: 10.5px; color: var(--muted); text-align: center; }
+
+/* ---- Footer / toast ------------------------------------------------------- */
+.foot { border-top: 1px solid rgba(127,255,212,.1); padding-top: 9px;
+  font-size: 10px; letter-spacing: .04em; color: var(--muted);
+  display: flex; justify-content: space-between; }
+.toast {
+  position: fixed; left: 50%; bottom: 14px; transform: translate(-50%, 20px);
+  background: var(--navy-3); color: var(--ink); border: 1px solid rgba(127,255,212,.3);
+  padding: 9px 14px; border-radius: 10px; font-size: 12px; max-width: 290px;
+  opacity: 0; pointer-events: none; transition: .3s; text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.err { border-color: var(--danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

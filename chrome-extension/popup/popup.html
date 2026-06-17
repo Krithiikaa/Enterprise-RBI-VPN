@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="popup.css">
+  <title>Aegis Enterprise Access</title>
+</head>
+<body>
+  <div class="shell">
+    <!-- Brand -->
+    <header class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path d="M16 2 4 7v8c0 7.2 5 12.4 12 15 7-2.6 12-7.8 12-15V7L16 2z"
+                fill="none" stroke="#7fffd4" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M11 16.5l3.4 3.4L21 12" fill="none" stroke="#7fffd4"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Aegis</h1>
+        <p>Enterprise Secure Access</p>
+      </div>
+      <button id="settingsBtn" class="gear" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor" d="M19.14 12.94a7.5 7.5 0 0 0 .05-.94 7.5 7.5 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.6 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88L2.72 14.5a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.58-.24 1.12-.56 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Connection status -->
+    <section class="status-card" id="statusCard">
+      <div class="status-row">
+        <span class="dot" id="serverDot"></span>
+        <span class="status-label" id="serverStatus">Checking gateway…</span>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <span class="metric-value" id="pingValue">—</span>
+          <span class="metric-key">ping</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value" id="activeValue">—</span>
+          <span class="metric-key">active sessions</span>
+        </div>
+        <div class="metric">
+          <span class="metric-value" id="freeValue">—</span>
+          <span class="metric-key">free slots</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- VPN toggle -->
+    <section class="vpn-block">
+      <div class="vpn-head">
+        <div>
+          <h2>Secure Routing</h2>
+          <p id="vpnSubtitle">Route browser traffic via the company gateway</p>
+        </div>
+        <button id="vpnToggle" class="switch" role="switch" aria-checked="false" aria-label="Secure routing">
+          <span class="knob"></span>
+        </button>
+      </div>
+      <div class="vpn-state" id="vpnState">
+        <span class="pulse" id="vpnPulse"></span>
+        <span id="vpnStateText">Routing off — traffic goes directly</span>
+      </div>
+    </section>
+
+    <!-- Remote browsing -->
+    <section class="rbi-block">
+      <button id="remoteBtn" class="primary">
+        <span class="primary-icon">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="none" stroke="#0a2342" stroke-width="2" stroke-linecap="round"
+                  d="M4 5h16v11H4zM2 20h20M9 12l3-3 3 3"/>
+          </svg>
+        </span>
+        Open Remote Browsing Session
+      </button>
+      <p class="rbi-note">Pages render on the server — nothing executes on this device.</p>
+    </section>
+
+    <footer class="foot">
+      <span id="hostFoot">No gateway configured</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

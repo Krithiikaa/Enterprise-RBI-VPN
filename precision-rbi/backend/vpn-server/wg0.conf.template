@@ -1,0 +1,19 @@
+# Precision RBI — WireGuard server template  [SRV-07]
+# The linuxserver/wireguard image used in docker-compose.yml AUTO-GENERATES server
+# keys and one peer config per PEER_COUNT at first boot into ./vpn-server/config.
+# This template documents the canonical shape; you normally do NOT edit it by hand.
+#
+# Split tunnel: only WG_SPLIT_TUNNEL (default 10.225.244.0/24) is routed through
+# the VPN, so team members keep direct internet for everything else.
+
+[Interface]
+Address = 10.13.13.1/24
+ListenPort = ${WG_PORT}
+PrivateKey = ${SERVER_PRIVATE_KEY}   # generated at first boot
+PostUp   = iptables -A FORWARD -i %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+# One [Peer] block is generated per team member. Example shape:
+# [Peer]
+# PublicKey = ${PEER_PUBLIC_KEY}
+# AllowedIPs = 10.13.13.2/32

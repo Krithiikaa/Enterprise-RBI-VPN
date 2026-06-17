@@ -1,0 +1,14 @@
+{
+  "name": "erv-rbi-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RBI session manager + noVNC websocket relay",
+  "scripts": {
+    "manager": "node session-manager.js",
+    "relay": "node websocket-relay.js"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "ws": "^8.18.0"
+  }
+}

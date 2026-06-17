@@ -1,0 +1,25 @@
+# ws-relay: noVNC websocket bridge. Bundles the noVNC client lib for the viewer.
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bundle noVNC client (served at /viewer/core/* and /viewer/vendor/*). Pinned tag.
+# --recurse-submodules is REQUIRED: noVNC vendors the pako zlib lib as a git
+# submodule, and the viewer's decoders import it. Without it the client 404s on
+# /vendor/pako/* and never opens the VNC WebSocket.
+RUN git clone --depth 1 --branch v1.5.0 --recurse-submodules --shallow-submodules \
+        https://github.com/novnc/noVNC.git /opt/novnc \
+    && test -f /opt/novnc/vendor/pako/lib/zlib/inflate.js \
+    && rm -rf /opt/novnc/.git
+
+COPY package.json ./
+RUN npm install --omit=dev
+
+COPY session-manager.js ./
+COPY websocket-relay.js ./
+
+ENV PORT=9200
+EXPOSE 9200
+CMD ["node", "websocket-relay.js"]

@@ -1,0 +1,188 @@
+# =============================================================================
+#  Enterprise RBI + VPN — Backend Orchestration
+#  All services run on the internal company network. No external runtime deps.
+# =============================================================================
+name: enterprise-rbi-vpn
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  # Public-facing edge network (nginx <-> broker/relay)
+  edge-net:
+    driver: bridge
+  # Internal network where per-session browser containers are attached.
+  # `internal: false` so containers can reach the company VPN/Internet egress.
+  rbi-net:
+    name: ${RBI_NETWORK_NAME:-enterprise-rbi-vpn_rbi-net}
+    driver: bridge
+
+volumes:
+  wireguard-config:
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. NGINX — reverse proxy + load balancer (single public entry point)
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: erv-nginx
+    restart: unless-stopped
+    ports:
+      - "${EDGE_HTTP_PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - session-broker
+      - ws-relay
+    networks:
+      - edge-net
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 2. SESSION-BROKER — public API: auth, capacity policy, lifecycle gateway
+  # ---------------------------------------------------------------------------
+  session-broker:
+    build:
+      context: ./session-broker
+    container_name: erv-session-broker
+    restart: unless-stopped
+    environment:
+      PORT: "9000"
+      RBI_MANAGER_URL: "http://rbi-manager:9100"
+      SESSION_TOKEN: "${SESSION_TOKEN}"
+      MAX_CONCURRENT_SESSIONS: "${MAX_CONCURRENT_SESSIONS:-12}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    depends_on:
+      - rbi-manager
+    networks:
+      - edge-net
+      - rbi-net
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 3. RBI-MANAGER — spawns/destroys per-session browser containers via Docker
+  #    (runs session-manager.js from rbi-service/)
+  # ---------------------------------------------------------------------------
+  rbi-manager:
+    build:
+      context: ./rbi-service
+      dockerfile: Dockerfile
+    container_name: erv-rbi-manager
+    restart: unless-stopped
+    environment:
+      PORT: "9100"
+      BROWSER_IMAGE: "${BROWSER_IMAGE:-rbi-browser:latest}"
+      RBI_NETWORK_NAME: "${RBI_NETWORK_NAME:-enterprise-rbi-vpn_rbi-net}"
+      SESSION_MEM_LIMIT_MB: "${SESSION_MEM_LIMIT_MB:-380}"
+      SESSION_CPU_QUOTA: "${SESSION_CPU_QUOTA:-0.5}"
+      SESSION_TTL_SECONDS: "${SESSION_TTL_SECONDS:-1800}"
+      SESSION_SHM_MB: "${SESSION_SHM_MB:-256}"
+      PROXY_GATEWAY_HOST: "proxy-gateway"
+      PROXY_GATEWAY_PORT: "3128"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    volumes:
+      # Required so the manager can spawn sibling browser containers.
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - rbi-net
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9100/capacity"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 4. WS-RELAY — proxies noVNC WebSocket from client to the right container
+  #    (runs websocket-relay.js from rbi-service/)
+  # ---------------------------------------------------------------------------
+  ws-relay:
+    build:
+      context: ./rbi-service
+      dockerfile: Dockerfile.relay
+    container_name: erv-ws-relay
+    restart: unless-stopped
+    environment:
+      PORT: "9200"
+      RBI_MANAGER_URL: "http://rbi-manager:9100"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    depends_on:
+      - rbi-manager
+    networks:
+      - edge-net
+      - rbi-net
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9200/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 5. PROXY-GATEWAY — forward proxy the Chrome extension routes traffic through
+  #    HTTPS is tunneled via CONNECT (no TLS interception => no cert install)
+  # ---------------------------------------------------------------------------
+  proxy-gateway:
+    build:
+      context: ./proxy-gateway
+    container_name: erv-proxy-gateway
+    restart: unless-stopped
+    ports:
+      - "${PROXY_PORT:-3128}:3128"
+    environment:
+      PORT: "3128"
+      PROXY_USER: "${PROXY_USER:-}"
+      PROXY_PASS: "${PROXY_PASS:-}"
+      UPSTREAM_VPN_HOST: "${UPSTREAM_VPN_HOST:-}"
+      UPSTREAM_VPN_PORT: "${UPSTREAM_VPN_PORT:-}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+    networks:
+      - rbi-net
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3128/__health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ---------------------------------------------------------------------------
+  # 6. VPN-SERVER — WireGuard for OS-level / full-device tunneling (optional)
+  #    Used when a device needs all OS traffic routed, not just the browser.
+  # ---------------------------------------------------------------------------
+  vpn-server:
+    build:
+      context: ./vpn-server
+    container_name: erv-vpn-server
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      net.ipv4.ip_forward: "1"
+      net.ipv4.conf.all.src_valid_mark: "1"
+    ports:
+      - "${WG_PORT:-51820}:51820/udp"
+    environment:
+      WG_SERVER_PRIVATE_KEY: "${WG_SERVER_PRIVATE_KEY}"
+      WG_SERVER_ADDRESS: "${WG_SERVER_ADDRESS:-10.13.13.1/24}"
+      WG_LISTEN_PORT: "51820"
+      WG_PEERS: "${WG_PEERS:-}"
+    volumes:
+      - wireguard-config:/config
+    networks:
+      - rbi-net
+    logging: *default-logging

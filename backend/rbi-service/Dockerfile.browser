@@ -1,0 +1,37 @@
+# =============================================================================
+#  rbi-browser : the per-session isolated browser image
+#  Built once, spawned one-container-per-user by the rbi-manager.
+#  Runs Chromium headless-on-Xvfb, exposed as a VNC->WebSocket (websockify)
+#  stream. The page is rendered HERE, on the server. The client gets pixels.
+# =============================================================================
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      chromium \
+      xvfb \
+      x11vnc \
+      x11-utils \
+      fluxbox \
+      websockify \
+      ca-certificates \
+      dumb-init \
+      procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user for the browser (defense in depth).
+RUN useradd -m -s /bin/bash kiosk
+COPY browser-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENV START_URL=about:blank \
+    BROWSER_PROXY= \
+    VNC_PORT=5900 \
+    NOVNC_PORT=6080 \
+    SCREEN_GEOMETRY=1280x800x24 \
+    DISPLAY=:0
+
+EXPOSE 6080
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/usr/local/bin/entrypoint.sh"]

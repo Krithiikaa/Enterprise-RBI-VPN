@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precision RBI — Isolated Session</title>
+  <link rel="stylesheet" href="../fonts/fonts.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; background: var(--navy); color: var(--text); font-family: var(--sans); overflow: hidden; }
+    .topbar { height: 44px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; background: var(--navy-mid); border-bottom: 0.5px solid var(--border); }
+    .topbar .left { display: flex; align-items: center; gap: 12px; }
+    .topbar .logo { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--mint); }
+    .topbar .title { font-family: var(--serif); font-size: 14px; font-weight: 600; }
+    .topbar .title span { color: var(--mint); }
+    .badge { font-size: 11px; padding: 3px 9px; border-radius: 6px; background: var(--navy); border: 0.5px solid var(--border); color: var(--text-dim); }
+    .badge.turbo { color: var(--mint); border-color: var(--mint); }
+    .right { display: flex; align-items: center; gap: 12px; }
+    #timer { font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+    #disconnect { background: var(--danger); color: #fff; border: 0; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; transition: 150ms; }
+    #disconnect:hover { filter: brightness(1.1); }
+    #screen { width: 100%; height: calc(100% - 44px); background: #000; position: relative; }
+    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: var(--navy); }
+    .overlay .ring { width: 48px; height: 48px; border: 3px solid rgba(127,255,212,.2); border-top-color: var(--mint); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay .msg { font-size: 13px; color: var(--text-dim); }
+    .overlay.err .ring { display: none; }
+    .overlay.err .msg { color: var(--danger); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="left">
+      <span class="logo"></span>
+      <span class="title">Precision <span>RBI</span> · Isolated</span>
+      <span class="badge" id="modeBadge">Standard</span>
+    </div>
+    <div class="right">
+      <span id="timer">00:00</span>
+      <button id="disconnect">Disconnect</button>
+    </div>
+  </div>
+  <div id="screen">
+    <div class="overlay" id="overlay">
+      <div class="ring"></div>
+      <div class="msg" id="overlayMsg">Provisioning isolated browser…</div>
+    </div>
+  </div>
+  <script src="viewer.js" type="module"></script>
+</body>
+</html>

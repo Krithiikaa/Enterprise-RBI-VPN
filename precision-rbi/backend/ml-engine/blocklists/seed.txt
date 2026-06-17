@@ -1,0 +1,11 @@
+# Precision RBI — seed blocklist (bundled at build time, HC-06).
+# REPLACE/AUGMENT at build time with real dumps:
+#   PhishTank:  https://data.phishtank.com/data/online-valid.csv  (extract domains)
+#   URLhaus:    https://urlhaus.abuse.ch/downloads/text/           (extract hosts)
+# Drop any number of *.txt files in this directory; one host per line, '#' = comment.
+# hosts-file format "0.0.0.0 domain" is also tolerated.
+malware-test.example
+phishing-test.example
+secure-paypa1-login.example
+free-bitcoin-doubler.tk
+account-verify-microsoft.gq

@@ -1,0 +1,81 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  width: 360px;
+  max-height: 560px;
+  background: var(--navy);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.brand { display: flex; align-items: center; gap: 9px; }
+.logo {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--mint);
+  position: relative;
+}
+.logo::after {
+  content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--mint);
+}
+.hdr h1 { font-family: var(--serif); font-size: 18px; font-weight: 600; letter-spacing: .3px; }
+.hdr h1 span { color: var(--mint); }
+.icon-btn {
+  background: transparent; border: 0.5px solid var(--border); color: var(--text-dim);
+  width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 14px;
+  transition: all 150ms ease;
+}
+.icon-btn:hover { color: var(--mint); border-color: var(--mint); }
+
+/* VPN card */
+.vpn-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--navy-mid);
+  border: 0.5px solid var(--border); border-radius: 14px; margin-bottom: 14px; }
+.ring-wrap { position: relative; width: 76px; height: 76px; flex: 0 0 auto; }
+.ring { width: 76px; height: 76px; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: rgba(168,216,234,.12); stroke-width: 8; }
+.ring-fill { fill: none; stroke: #5c6b7a; stroke-width: 8; stroke-linecap: round;
+  stroke-dasharray: 327; stroke-dashoffset: 327; transition: stroke 200ms ease, stroke-dashoffset 400ms ease; }
+.ring-wrap.on .ring-fill { stroke: var(--success); stroke-dashoffset: 0; }
+.ring-wrap.connecting .ring-fill { stroke: var(--mint); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { stroke-dashoffset: 80; } 50% { stroke-dashoffset: 240; } }
+.ring-btn { position: absolute; inset: 14px; border-radius: 50%; border: 0.5px solid var(--border);
+  background: var(--navy); color: var(--text-dim); font-size: 20px; cursor: pointer; transition: all 150ms ease; }
+.ring-wrap.on .ring-btn { color: var(--success); border-color: var(--success); }
+.vpn-meta { flex: 1; }
+.status { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.status.on { color: var(--success); }
+.status.off { color: var(--text-dim); }
+.status.connecting { color: var(--mint); }
+.sub { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.stat { background: var(--navy-mid); border: 0.5px solid var(--border); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.stat-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-dim); margin-bottom: 5px; }
+.stat-val { font-family: var(--serif); font-size: 20px; font-weight: 600; }
+.stat-val small { font-size: 10px; color: var(--text-dim); margin-left: 2px; font-family: var(--sans); }
+.risk-badge { font-size: 14px; padding: 2px 8px; border-radius: 6px; }
+.risk-low { color: var(--success); } .risk-med { color: var(--mint); } .risk-high { color: var(--danger); }
+
+/* actions */
+.actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.btn { width: 100%; padding: 11px; border-radius: 10px; font-family: var(--sans); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all 150ms ease; display: flex; align-items: center;
+  justify-content: center; gap: 8px; }
+.btn.primary { background: var(--mint); color: var(--navy); border: 0.5px solid var(--mint); }
+.btn.primary:hover { background: #6ee9c0; }
+.btn.primary:disabled { opacity: .6; cursor: wait; }
+.btn.ghost { background: transparent; color: var(--text-dim); border: 0.5px solid var(--border); }
+.btn.ghost:hover { color: var(--mint); border-color: var(--mint); }
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(10,35,66,.3); border-top-color: var(--navy);
+  border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* footer */
+.ftr { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim);
+  padding-top: 12px; border-top: 0.5px solid var(--border); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #5c6b7a; transition: background 150ms ease; }
+.dot.up { background: var(--success); } .dot.down { background: var(--danger); }

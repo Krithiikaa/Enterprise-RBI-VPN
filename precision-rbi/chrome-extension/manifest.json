@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "Precision RBI",
+  "version": "0.1.0",
+  "description": "Enterprise Remote Browser Isolation — inline proxy control, risk-based isolation, DLP/BDR enforcement.",
+  "minimum_chrome_version": "116",
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Precision RBI",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "options_page": "options/options.html",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "permissions": [
+    "proxy",
+    "storage",
+    "alarms",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content-script.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["rbi-viewer/viewer.html", "fonts/*", "content/watermark.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; connect-src 'self' https: wss:; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'"
+  }
+}

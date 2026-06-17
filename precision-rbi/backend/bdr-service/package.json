@@ -1,0 +1,10 @@
+{
+  "name": "precision-rbi-bdr-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "bdr.js",
+  "scripts": { "start": "node bdr.js" },
+  "dependencies": { "ioredis": "^5.4.1" },
+  "engines": { "node": ">=20" }
+}

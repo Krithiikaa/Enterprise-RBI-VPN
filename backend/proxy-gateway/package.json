@@ -1,0 +1,9 @@
+{
+  "name": "erv-proxy-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Forward proxy (HTTP forward + HTTPS CONNECT tunnel, no TLS MITM)",
+  "main": "proxy.js",
+  "scripts": { "start": "node proxy.js" },
+  "dependencies": {}
+}

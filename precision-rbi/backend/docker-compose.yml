@@ -1,0 +1,254 @@
+# Precision RBI — backend orchestration
+# Tuned for the dev host (Ryzen 3 7320U, 7.21 GiB RAM). See ARCHITECTURE.md §4 for
+# the honest capacity budget. RBI containers are NOT defined here — they are spawned
+# on demand by session-broker via the Docker socket (see [SRV-06] / broker.js).
+#
+# All tunables live in .env (copy .env.example -> .env). Nothing sensitive is hardcoded.
+
+name: precision-rbi
+
+x-restart: &restart
+  restart: unless-stopped
+
+networks:
+  # Front-of-house: services nginx talks to.
+  edge-net:
+    driver: bridge
+  # Isolated network for spawned RBI containers. No gateway route to the host LAN;
+  # only session-broker (which sits on both) can reach these containers.
+  rbi-net:
+    name: rbi-net
+    driver: bridge
+    internal: true        # <- RBI containers get NO outbound host/LAN access
+  # Internal service mesh (redis, ml-engine, ssl-inspector, sandbox, bdr).
+  svc-net:
+    driver: bridge
+    internal: true
+
+volumes:
+  redis-data:
+  audit-data:
+
+services:
+  # ---------------------------------------------------------------------------
+  # [SRV-01] nginx — TLS termination + reverse proxy + WS upgrade + rate limit
+  # ---------------------------------------------------------------------------
+  nginx:
+    <<: *restart
+    build: ./nginx
+    image: precision-rbi/nginx
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      - PROXY_HOST=proxy-service
+      - BROKER_HOST=session-broker
+      - ADMIN_HOST=admin-console
+      - BDR_HOST=bdr-service
+    networks: [edge-net]
+    depends_on: [session-broker, proxy-service, admin-console, bdr-service]
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.25' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-11] redis — score cache / session store / heartbeat / BDR counters
+  # ---------------------------------------------------------------------------
+  redis:
+    <<: *restart
+    image: redis:7-alpine
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru", "--save", "60", "1"]
+    volumes: [redis-data:/data]
+    networks: [svc-net]
+    deploy:
+      resources:
+        limits: { memory: 320M, cpus: '0.25' }
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # [SRV-04] ml-engine — FastAPI URL/content risk scorer (blocklists bundled)
+  # ---------------------------------------------------------------------------
+  ml-engine:
+    <<: *restart
+    build: ./ml-engine
+    image: precision-rbi/ml-engine
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - ISOLATE_THRESHOLD=${ISOLATE_THRESHOLD:-50}
+      - BLOCK_THRESHOLD=${BLOCK_THRESHOLD:-80}
+      - SCORE_CACHE_TTL=${SCORE_CACHE_TTL:-3600}
+    networks: [svc-net]
+    depends_on:
+      redis: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '0.5' }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; urllib.request.urlopen('http://localhost:8001/health'); sys.exit(0)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # [SRV-03] ssl-inspector — server-side decrypt/feature-extract/re-encrypt
+  # ---------------------------------------------------------------------------
+  ssl-inspector:
+    <<: *restart
+    build: ./ssl-inspector
+    image: precision-rbi/ssl-inspector
+    environment:
+      - ML_ENGINE_URL=http://ml-engine:8001
+      - BYPASS_DOMAINS=${BYPASS_DOMAINS:-}
+    volumes:
+      - ./ca:/ca:ro            # generated CA, read-only
+    networks: [svc-net]
+    depends_on: [ml-engine]
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-02] proxy-service — inline MITM proxy (8080) + PAC server (8888)
+  # ---------------------------------------------------------------------------
+  proxy-service:
+    <<: *restart
+    build: ./proxy-service
+    image: precision-rbi/proxy-service
+    environment:
+      - PROXY_PORT=8080
+      - PAC_PORT=8888
+      - ML_ENGINE_URL=http://ml-engine:8001
+      - INSPECTOR_URL=http://ssl-inspector:8090
+      - BROKER_URL=http://session-broker:3001
+      - SERVER_PUBLIC_HOST=${SERVER_PUBLIC_HOST}
+      - ISOLATE_THRESHOLD=${ISOLATE_THRESHOLD:-50}
+      - BLOCK_THRESHOLD=${BLOCK_THRESHOLD:-80}
+      - BYPASS_DOMAINS=${BYPASS_DOMAINS:-}
+    volumes:
+      - ./ca:/ca               # CA cert lives here; generated at first boot
+    networks: [edge-net, svc-net]
+    depends_on: [ml-engine, ssl-inspector]
+    deploy:
+      resources:
+        limits: { memory: 384M, cpus: '0.5' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-05] session-broker — spawns/kills RBI containers; owns teardown logic
+  # Needs the Docker socket to manage sibling containers. This is privileged;
+  # see ARCHITECTURE.md §3 for the trust-boundary note on socket exposure.
+  # ---------------------------------------------------------------------------
+  session-broker:
+    <<: *restart
+    build: ./session-broker
+    image: precision-rbi/session-broker
+    environment:
+      - PORT=3001
+      - REDIS_URL=redis://redis:6379/1
+      - RBI_IMAGE=precision-rbi/rbi-container
+      - RBI_NETWORK=rbi-net
+      - HOST_PORT_MIN=${HOST_PORT_MIN:-6080}
+      - HOST_PORT_MAX=${HOST_PORT_MAX:-6180}
+      - SESSION_MEM_MB=${SESSION_MEM_MB:-1024}
+      - SESSION_CPUS=${SESSION_CPUS:-0.5}
+      - HEARTBEAT_TIMEOUT_MS=${HEARTBEAT_TIMEOUT_MS:-30000}
+      - WATCHDOG_INTERVAL_MS=${WATCHDOG_INTERVAL_MS:-10000}
+      - MAX_SESSIONS=${MAX_SESSIONS:-4}
+      - SERVER_PUBLIC_HOST=${SERVER_PUBLIC_HOST}
+      - APP_VERSION=${APP_VERSION:-0.1.0}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [edge-net, rbi-net, svc-net]
+    depends_on:
+      redis: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-08] sandbox — ClamAV + static file triage (signatures bundled)
+  # ---------------------------------------------------------------------------
+  sandbox:
+    <<: *restart
+    build: ./sandbox
+    image: precision-rbi/sandbox
+    networks: [svc-net]
+    deploy:
+      resources:
+        limits: { memory: 768M, cpus: '0.5' }   # ClamAV is the memory hog here
+
+  # ---------------------------------------------------------------------------
+  # [SRV-09] bdr-service — browser detection & response telemetry sink
+  # ---------------------------------------------------------------------------
+  bdr-service:
+    <<: *restart
+    build: ./bdr-service
+    image: precision-rbi/bdr-service
+    environment:
+      - PORT=3002
+      - REDIS_URL=redis://redis:6379/2
+      - ALERT_WINDOW_MS=${BDR_ALERT_WINDOW_MS:-300000}
+      - ALERT_THRESHOLD=${BDR_ALERT_THRESHOLD:-3}
+    volumes:
+      - audit-data:/data
+    networks: [edge-net, svc-net]
+    depends_on:
+      redis: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 192M, cpus: '0.25' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-10] admin-console — React dashboard + thin Node API
+  # ---------------------------------------------------------------------------
+  admin-console:
+    <<: *restart
+    build: ./admin-console
+    image: precision-rbi/admin-console
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379/1
+      - BROKER_URL=http://session-broker:3001
+      - BDR_URL=http://bdr-service:3002
+      - ML_ENGINE_URL=http://ml-engine:8001
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS}
+      - HOST_TOTAL_MEM_MB=${HOST_TOTAL_MEM_MB:-7380}
+    volumes:
+      - audit-data:/data
+    networks: [edge-net, svc-net]
+    depends_on: [session-broker, bdr-service]
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
+
+  # ---------------------------------------------------------------------------
+  # [SRV-07] vpn-server — WireGuard (auto-keygen, split tunnel)
+  # ---------------------------------------------------------------------------
+  vpn-server:
+    <<: *restart
+    image: lscr.io/linuxserver/wireguard:latest
+    cap_add: [NET_ADMIN, SYS_MODULE]
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - SERVERURL=${SERVER_PUBLIC_HOST}
+      - SERVERPORT=${WG_PORT:-51820}
+      - PEERS=${PEER_COUNT:-10}
+      - PEERDNS=auto
+      - ALLOWEDIPS=${WG_SPLIT_TUNNEL:-10.225.244.0/24}
+      - INTERNAL_SUBNET=10.13.13.0
+    ports:
+      - "${WG_PORT:-51820}:51820/udp"
+    volumes:
+      - ./vpn-server/config:/config
+      - /lib/modules:/lib/modules:ro
+    networks: [edge-net]
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.25' }
