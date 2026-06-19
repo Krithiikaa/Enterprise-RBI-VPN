@@ -169,7 +169,8 @@ Tweak container resource limits based on your hardware. Apply changes with `dock
 | `SESSION_TTL_SECONDS` | Idle timeout before auto-destruct | `1800` |
 
 ---
-
 <div align="center">
-  <sub>Built for Security Teams. Designed for Humans. 🔒</sub>
+  <img src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cGVscmE3eDZzZjAzYzhzcDhwOTJ1dHhoMDQ0dnh4ZXNwNjZ3ZGZ3ZCZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/5EOYACH9SWWA45b4Bp/giphy.gif" width="120" alt="Neon Drawing Pencil" />
+  
+  *Created with ❤️ by Krithiikaa. 🛡️ Built for Security Teams. 🔒 Designed for Humans.*
 </div>
